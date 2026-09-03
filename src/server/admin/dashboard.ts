@@ -1,12 +1,16 @@
 import { EventRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { listCheckInAttemptsForEvent } from "@/server/check-in/queries";
+import type { CheckInAttemptRecord } from "@/types/check-in";
 
 export interface DashboardStats {
   tablesCount: number;
   guestsCount: number;
   controllersCount: number;
   ticketsCount: number;
+  checksCount: number;
+  acceptedChecksCount: number;
 }
 
 export interface DashboardEventInfo {
@@ -19,8 +23,9 @@ export interface DashboardEventInfo {
 export async function getDashboardData(eventId: string): Promise<{
   event: DashboardEventInfo;
   stats: DashboardStats;
+  recentAttempts: CheckInAttemptRecord[];
 }> {
-  const [event, tablesCount, guestsCount, controllersCount, ticketsCount] =
+  const [event, tablesCount, guestsCount, controllersCount, ticketsCount, checksCount, acceptedChecksCount, recentAttempts] =
     await Promise.all([
       prisma.event.findUniqueOrThrow({
         where: { id: eventId },
@@ -37,6 +42,9 @@ export async function getDashboardData(eventId: string): Promise<{
         where: { eventId, role: EventRole.CONTROLLER, isActive: true },
       }),
       prisma.ticket.count({ where: { eventId } }),
+      prisma.checkInAttempt.count({ where: { eventId } }),
+      prisma.checkInAttempt.count({ where: { eventId, result: { in: ["ACCEPTED", "MANUAL_ACCEPTED"] } } }),
+      listCheckInAttemptsForEvent(eventId, 5),
     ]);
 
   return {
@@ -46,7 +54,10 @@ export async function getDashboardData(eventId: string): Promise<{
       guestsCount,
       controllersCount,
       ticketsCount,
+      checksCount,
+      acceptedChecksCount,
     },
+    recentAttempts,
   };
 }
 

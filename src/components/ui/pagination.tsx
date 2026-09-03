@@ -15,7 +15,7 @@ export interface PaginationProps {
 
 export function Pagination({ page, totalItems, pageSize, onPageChange, onPageSizeChange, pageSizeOptions = [10, 25, 50, 100], itemLabel = "éléments", className }: PaginationProps) {
   const pageCount = Math.max(1, Math.ceil(totalItems / pageSize));
-  if (totalItems <= pageSize) return null;
+  if (totalItems <= pageSize && !onPageSizeChange) return null;
   const safePage = Math.min(Math.max(page, 1), pageCount);
   const start = (safePage - 1) * pageSize + 1;
   const end = Math.min(safePage * pageSize, totalItems);

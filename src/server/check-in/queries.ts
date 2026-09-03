@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { CheckInAttemptRecord } from "@/types/check-in";
 
-export async function listCheckInAttemptsForEvent(eventId: string): Promise<CheckInAttemptRecord[]> {
+export async function listCheckInAttemptsForEvent(eventId: string, take?: number): Promise<CheckInAttemptRecord[]> {
   const attempts = await prisma.checkInAttempt.findMany({
     where: { eventId },
     orderBy: { scannedAt: "desc" },
+    ...(take ? { take } : {}),
     include: {
       operator: { select: { displayName: true } },
       ticket: {

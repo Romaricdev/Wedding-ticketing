@@ -1,8 +1,9 @@
 import Link from "next/link";
 import {
   Armchair,
+  ArrowRight,
+  Camera,
   History,
-  ListChecks,
   ShieldCheck,
   Ticket,
   Users,
@@ -44,7 +45,7 @@ function MetricCard({ label, value, href, icon }: MetricCardProps) {
 
 export default async function AdminPage() {
   const eventUser = await requireAdmin();
-  const { event, stats } = await getDashboardData(eventUser.event.id);
+  const { event, stats, recentAttempts } = await getDashboardData(eventUser.event.id);
   const eventMeta = formatEventMeta(event);
 
   return (
@@ -96,7 +97,7 @@ export default async function AdminPage() {
             icon={<ShieldCheck className="size-5" />}
           />
           <MetricCard
-            label="Billets générés"
+            label="Billets créés"
             value={stats.ticketsCount}
             href="/admin/billets"
             icon={<Ticket className="size-5" />}
@@ -105,29 +106,11 @@ export default async function AdminPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card className="space-y-4 rounded-sm p-5">
-          <div className="flex items-center gap-2">
-            <ListChecks className="size-5 text-primary" aria-hidden="true" />
-            <h2 className="text-lg font-semibold text-text">Prochaines étapes</h2>
-          </div>
-          <ul className="space-y-3 text-sm text-text-muted">
-            <li className="flex items-start gap-2">
-              <StatusBadge status="info" label="Phase 3" />
-              <span>Finaliser la configuration des tables et des places.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <StatusBadge status="info" label="Phase 4" />
-              <span>Compléter la liste des invités et leurs affectations.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <StatusBadge status="info" label="Phase 5" />
-              <span>Créer les billets Single et Couple, puis générer les PDF.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <StatusBadge status="warning" label="Phase 6" />
-              <span>Activer le scanner caméra le jour de l&apos;événement.</span>
-            </li>
-          </ul>
+        <Card className="space-y-5 rounded-sm p-5">
+          <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" aria-hidden="true" /><h2 className="text-lg font-semibold text-text">Suivi des entrées</h2></div><Link href="/admin/historique" className="text-sm font-medium text-primary hover:underline">Voir l’historique</Link></div>
+          <div><div className="flex items-end justify-between gap-3"><div><p className="text-3xl font-bold tabular-nums text-text">{stats.acceptedChecksCount}<span className="text-lg font-medium text-text-muted"> / {stats.ticketsCount}</span></p><p className="mt-1 text-sm text-text-muted">billets validés à l’entrée</p></div><p className="text-sm font-medium text-text-muted">{stats.ticketsCount ? Math.round((stats.acceptedChecksCount / stats.ticketsCount) * 100) : 0}%</p></div><div className="mt-3 h-2 overflow-hidden bg-surface-subtle"><div className="h-full bg-success transition-all" style={{ width: `${stats.ticketsCount ? Math.min(100, (stats.acceptedChecksCount / stats.ticketsCount) * 100) : 0}%` }} /></div></div>
+          <div className="grid grid-cols-2 gap-4 border-y border-border py-4 text-sm"><div><p className="text-text-muted">Restant à contrôler</p><p className="mt-1 text-xl font-semibold tabular-nums text-text">{Math.max(stats.ticketsCount - stats.acceptedChecksCount, 0)}</p></div><div><p className="text-text-muted">Tentatives refusées</p><p className="mt-1 text-xl font-semibold tabular-nums text-text">{Math.max(stats.checksCount - stats.acceptedChecksCount, 0)}</p></div></div>
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Actions rapides</p><div className="mt-3 grid gap-2 sm:grid-cols-3"><Link href="/admin/invites" className="group flex items-center justify-between border border-border px-3 py-2.5 text-sm font-medium text-text transition-colors hover:border-primary/40 hover:bg-primary-subtle">Ajouter un invité <ArrowRight className="size-4 text-text-muted group-hover:text-primary" /></Link><Link href="/admin/billets" className="group flex items-center justify-between border border-border px-3 py-2.5 text-sm font-medium text-text transition-colors hover:border-primary/40 hover:bg-primary-subtle">Créer un billet <ArrowRight className="size-4 text-text-muted group-hover:text-primary" /></Link><Link href="/controle/scan" className="group flex items-center justify-between border border-border px-3 py-2.5 text-sm font-medium text-text transition-colors hover:border-primary/40 hover:bg-primary-subtle">Ouvrir le scanner <Camera className="size-4 text-text-muted group-hover:text-primary" /></Link></div></div>
         </Card>
 
         <Card className="space-y-4 rounded-sm p-5">
@@ -140,10 +123,7 @@ export default async function AdminPage() {
               Voir l&apos;historique complet
             </Link>
           </div>
-          <EmptyState
-            title="Aucune entrée enregistrée"
-            description="Les scans et validations apparaîtront ici une fois le check-in activé en Phase 6."
-          />
+          {recentAttempts.length === 0 ? <EmptyState title="Aucune entrée enregistrée" description="Les scans et validations apparaîtront ici dès le premier contrôle." /> : <div className="divide-y divide-border border-y border-border">{recentAttempts.map((attempt) => { const accepted = attempt.result === "ACCEPTED" || attempt.result === "MANUAL_ACCEPTED"; const guests = attempt.ticket?.guests.map((guest) => `${guest.lastName} ${guest.firstNames}`).join(" · "); return <div key={attempt.id} className="flex items-center justify-between gap-3 px-1 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-text">{guests ?? "QR code non reconnu"}</p><p className="mt-0.5 text-xs text-text-muted">{attempt.ticket ? `Table ${attempt.ticket.tableLabel}` : "Aucun billet associé"} · {new Date(attempt.scannedAt).toLocaleString("fr-FR")}</p></div><StatusBadge status={accepted ? "success" : "danger"} label={accepted ? "Validé" : "Refusé"} /></div>; })}</div>}
         </Card>
       </section>
     </div>

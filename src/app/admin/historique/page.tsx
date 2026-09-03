@@ -1,14 +1,9 @@
-import { History } from "lucide-react";
+import { HistoryPageClient } from "@/components/admin/history/history-page-client";
+import { requireAdmin } from "@/server/auth";
+import { listCheckInAttemptsForEvent } from "@/server/check-in/queries";
 
-import { AdminPlaceholderPage } from "@/components/admin/admin-placeholder-page";
-
-export default function AdminHistoriquePage() {
-  return (
-    <AdminPlaceholderPage
-      title="Historique"
-      description="Journal des scans, validations et refus."
-      icon={History}
-      nextPhaseLabel="en Phase 7"
-    />
-  );
+export default async function AdminHistoriquePage() {
+  const eventUser = await requireAdmin();
+  const attempts = await listCheckInAttemptsForEvent(eventUser.eventId);
+  return <HistoryPageClient initialAttempts={attempts} />;
 }
