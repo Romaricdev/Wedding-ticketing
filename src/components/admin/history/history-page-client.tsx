@@ -23,15 +23,16 @@ export function HistoryPageClient({ initialAttempts }: { initialAttempts: CheckI
   const [result, setResult] = useState("ALL");
   const [operator, setOperator] = useState("ALL");
   const [period, setPeriod] = useState("ALL");
+  const [referenceTime] = useState(() => Date.now());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const operators = useMemo(() => Array.from(new Set(initialAttempts.map((item) => item.operatorName).filter((item): item is string => Boolean(item)))).sort(), [initialAttempts]);
   const attempts = useMemo(() => initialAttempts.filter((item) => {
     const searchable = `${item.ticket?.shortCode ?? ""} ${item.ticket?.guests.map((guest) => `${guest.lastName} ${guest.firstNames}`).join(" ") ?? ""}`.toLocaleLowerCase("fr-FR");
-    const age = Date.now() - new Date(item.scannedAt).getTime();
-    const inPeriod = period === "ALL" || (period === "TODAY" && new Date(item.scannedAt).toDateString() === new Date().toDateString()) || (period === "7D" && age <= 7 * 86_400_000) || (period === "30D" && age <= 30 * 86_400_000);
+    const age = referenceTime - new Date(item.scannedAt).getTime();
+    const inPeriod = period === "ALL" || (period === "TODAY" && new Date(item.scannedAt).toDateString() === new Date(referenceTime).toDateString()) || (period === "7D" && age <= 7 * 86_400_000) || (period === "30D" && age <= 30 * 86_400_000);
     return (!query || searchable.includes(query.toLocaleLowerCase("fr-FR"))) && (result === "ALL" || item.result === result) && (operator === "ALL" || item.operatorName === operator) && inPeriod;
-  }), [initialAttempts, operator, period, query, result]);
+  }), [initialAttempts, operator, period, query, referenceTime, result]);
   const pageCount = Math.max(1, Math.ceil(attempts.length / pageSize));
   const safePage = Math.min(page, pageCount);
   const visibleAttempts = attempts.slice((safePage - 1) * pageSize, safePage * pageSize);

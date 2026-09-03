@@ -1,14 +1,8 @@
-import { ShieldCheck } from "lucide-react";
+import { ControllersPageClient } from "@/components/admin/controllers/controllers-page-client";
+import { requireAdmin } from "@/server/auth";
+import { listControllersForEvent } from "@/server/controllers/queries";
 
-import { AdminPlaceholderPage } from "@/components/admin/admin-placeholder-page";
-
-export default function AdminControleursPage() {
-  return (
-    <AdminPlaceholderPage
-      title="Contrôleurs"
-      description="Comptes autorisés à scanner et contrôler les entrées."
-      icon={ShieldCheck}
-      nextPhaseLabel="dans une phase ultérieure"
-    />
-  );
+export default async function AdminControleursPage() {
+  const admin = await requireAdmin();
+  return <ControllersPageClient initialControllers={await listControllersForEvent(admin.eventId)} />;
 }
