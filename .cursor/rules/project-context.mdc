@@ -1,0 +1,15 @@
+---
+description: Contexte et invariants métier du projet de billetterie mariage.
+alwaysApply: true
+---
+
+Avant toute tâche, lire `README.md`, puis les documents pertinents de `docs/`.
+
+- Ne jamais inventer de règle métier qui n'est pas documentée ; demander une décision en cas d'ambiguïté.
+- Les décisions de `docs/DECISIONS_METIER_FINALES.md` prévalent sur tous les autres documents.
+- QR opaque : aucune donnée personnelle dans le QR et aucun jeton brut persisté.
+- La validation de billet est serveur + PostgreSQL atomique, jamais client-only.
+- Single = 1 invité. Couple = 2 invités distincts, même table, arrivée obligatoire ensemble.
+- Tout billet exige une table ; la capacité de table n'est jamais dépassée.
+- Seul ADMIN valide manuellement ; CONTROLLER peut rechercher mais pas consommer manuellement.
+- Ne pas ajouter paiement, messagerie automatique, offline check-in ou édition graphique du template PDF.

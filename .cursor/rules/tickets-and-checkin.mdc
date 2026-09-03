@@ -1,0 +1,18 @@
+---
+description: Règles critiques pour billets, PDF, QR et contrôle d'accès.
+globs:
+  - "src/**/ticket*/**"
+  - "src/**/check-in/**"
+  - "src/**/scan/**"
+  - "src/**/pdf/**"
+  - "prisma/**"
+alwaysApply: false
+---
+
+- Suivre `docs/DECISIONS_METIER_FINALES.md` et `docs/SPECIFICATION_BASE_DE_DONNEES.md`.
+- Billet Couple : ne jamais modifier les membres ; annuler/révoquer puis recréer.
+- Si PDF échoue après création, relancer sur le même billet et même jeton.
+- Réémission : révoquer ancien billet, créer nouveau jeton ; ne jamais modifier un jeton historique.
+- Check-in : update conditionnel/transaction, un seul ACCEPTED par ticket, journaliser tout scan.
+- Sans Internet : informer que le serveur ne répond pas et ne jamais afficher de succès local.
+- Template PDF fixe : ajouter seulement QR noir, fond blanc, marge blanche, coordonnées PDF exactes.

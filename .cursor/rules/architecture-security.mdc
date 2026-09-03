@@ -1,0 +1,17 @@
+---
+description: Architecture Next.js, Supabase, Prisma et sécurité côté serveur.
+globs:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+  - "prisma/**"
+alwaysApply: false
+---
+
+- Next.js App Router et TypeScript strict.
+- Supabase fournit Auth, PostgreSQL et Storage ; Prisma est l'accès unique aux données métier.
+- Vérifier session, événement et rôle côté serveur pour chaque action métier.
+- Ne jamais envoyer `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DIRECT_URL` ou secret QR au navigateur.
+- Valider entrées API avec Zod et retourner des erreurs françaises sans détails sensibles.
+- Les scans, création/révocation/réémission sont transactionnels.
+- Préserver l'historique : pas de suppression définitive de billet, invité, scan ou audit log.
+- Suivre `docs/SPECIFICATION_BASE_DE_DONNEES.md` pour schéma, index et contraintes.

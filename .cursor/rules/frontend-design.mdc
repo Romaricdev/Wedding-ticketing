@@ -1,0 +1,17 @@
+---
+description: Règles UI, design system, accessibilité et responsive.
+globs:
+  - "src/**/*.tsx"
+  - "src/**/*.css"
+  - "src/**/components/**"
+alwaysApply: false
+---
+
+- Lire `docs/DESIGN_SYSTEM_APPLICATION.md` et `docs/BRIEF_UI_PRET_A_IMPLEMENTER.md` avant de créer un écran.
+- Utiliser Tailwind et `lucide-react` uniquement pour les icônes.
+- Direction : back office fonctionnel inspiré de Cloudflare, pas site romantique.
+- Implémenter chargement, vide, erreur, succès et accès refusé quand pertinents.
+- Tout écran est responsive à 320, 375, 768, 1024 et 1440 px.
+- Sur mobile, ne pas rendre de tableaux illisibles : utiliser listes/cartes et tiroirs/plein écran.
+- Champs mobiles >=16px, cibles tactiles >=44px, focus visible, labels et erreurs accessibles.
+- Scanner : plein écran mobile, contraste fort, une action principale, statut exprimé par texte+icône+couleur.

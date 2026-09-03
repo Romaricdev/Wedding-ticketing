@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+:root {
+  /* Design tokens — docs/DESIGN_SYSTEM_APPLICATION.md */
+  --background: #f5f6f8;
+  --surface: #ffffff;
+  --surface-subtle: #f3f5f7;
+  --text: #1d1d1f;
+  --text-muted: #5c5f66;
+  --border: #d8dde3;
+  --primary: #f48120;
+  --primary-hover: #c8560a;
+  --primary-subtle: #fff1e6;
+  --info: #41464d;
+  --success: #1a7f37;
+  --success-subtle: #e8f6ec;
+  --warning: #b54708;
+  --warning-subtle: #fff4e5;
+  --danger: #c83532;
+  --danger-subtle: #fdedec;
+  --focus: #59616b;
+  --shadow-overlay: 0 12px 28px rgb(29 29 31 / 14%);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-focus: var(--focus);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --shadow-overlay: var(--shadow-overlay);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--background);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  a {
+    color: var(--info);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .shadow-overlay {
+    box-shadow: var(--shadow-overlay);
+  }
+
+  .animate-page-in {
+    animation: page-in 260ms var(--ease-out) both;
+  }
+
+  .animate-overlay-in {
+    animation: overlay-in 180ms ease-out both;
+  }
+
+  .animate-dialog-in {
+    animation: dialog-in 260ms var(--ease-out) both;
+  }
+
+  .animate-overlay-out {
+    animation: overlay-out 180ms ease-in both;
+  }
+
+  .animate-dialog-out {
+    animation: dialog-out 180ms ease-in both;
+  }
+
+  .animate-toast-in {
+    animation: toast-in 260ms var(--ease-out) both;
+  }
+
+  .animate-navigation-progress {
+    animation: navigation-progress 1.1s var(--ease-out) infinite;
+  }
+
+  .success-icon-ring {
+    animation: success-ring-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .success-icon-pop {
+    animation: success-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+  }
+
+  .success-content-in {
+    animation: success-fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
+  }
+
+  @keyframes success-ring-in {
+    from {
+      opacity: 0;
+      transform: scale(0.72);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes page-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes overlay-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes dialog-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(6px) scale(0.99); }
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes navigation-progress {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(165%); }
+  }
+
+  @keyframes success-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes success-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
