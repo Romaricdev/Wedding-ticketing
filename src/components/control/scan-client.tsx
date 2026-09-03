@@ -35,8 +35,6 @@ export function ScanClient({ canManual, initialAttempts }: { canManual: boolean;
     refresh(); window.addEventListener("online", refresh); window.addEventListener("offline", refresh);
     return () => { window.removeEventListener("online", refresh); window.removeEventListener("offline", refresh); stopCamera(); };
   }, []);
-  useEffect(() => { setAttempts(initialAttempts); }, [initialAttempts]);
-
   const refreshAttempts = async () => {
     const history = await listCheckInAttemptsAction();
     if (history.attempts) { setAttempts(history.attempts); setHistoryPage(1); }
@@ -107,11 +105,11 @@ export function ScanClient({ canManual, initialAttempts }: { canManual: boolean;
 function ScanResult({ response }: { response: CheckInResponse }) {
   const accepted = response.accepted;
   const Icon = accepted ? CheckCircle2 : XCircle;
-  return <Surface className={cn("border-l-4 p-4 shadow-sm sm:p-5", accepted ? "border-l-success" : "border-l-danger")}><div className="flex items-start gap-3"><Icon className={cn("mt-0.5 size-6 shrink-0", accepted ? "text-success" : "text-danger")} aria-hidden="true" /><div className="min-w-0 flex-1"><h2 className="text-lg font-semibold text-text">{response.title}</h2><p className="mt-1 text-sm text-text-muted">{response.message}</p>{response.ticket ? <div className="mt-4 border-t border-border pt-4"><TicketIdentity ticket={response.ticket} /></div> : null}</div></div></Surface>;
+  return <Surface className={cn("border-l-4 p-3 shadow-sm sm:p-5", accepted ? "border-l-success" : "border-l-danger")}><div className="flex items-start gap-2.5 sm:gap-3"><Icon className={cn("mt-0.5 size-5 shrink-0 sm:size-6", accepted ? "text-success" : "text-danger")} aria-hidden="true" /><div className="min-w-0 flex-1"><h2 className="text-base font-semibold text-text sm:text-lg">{response.title}</h2><p className="mt-0.5 text-sm text-text-muted sm:mt-1">{response.message}</p>{response.ticket ? <div className="mt-3 border-t border-border pt-3 sm:mt-4 sm:pt-4"><TicketIdentity ticket={response.ticket} /></div> : null}</div></div></Surface>;
 }
 
 function TicketIdentity({ ticket }: { ticket: CheckInTicketSummary }) {
-  return <div className="grid gap-3 text-sm sm:grid-cols-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Invité{ticket.guests.length > 1 ? "s" : ""}</p><p className="mt-1 font-medium text-text">{ticket.guests.map((guest) => `${guest.lastName} ${guest.firstNames}`).join(" · ")}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Table</p><p className="mt-1 font-medium text-text">{ticket.tableLabel}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Billet</p><p className="mt-1 font-medium text-text">{ticket.type === "COUPLE" ? "Couple" : "Single"} · {ticket.shortCode}</p></div></div>;
+  return <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3"><div className="col-span-2 sm:col-span-1"><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Invité{ticket.guests.length > 1 ? "s" : ""}</p><p className="mt-0.5 font-medium text-text sm:mt-1">{ticket.guests.map((guest) => `${guest.lastName} ${guest.firstNames}`).join(" · ")}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Table</p><p className="mt-0.5 font-medium text-text sm:mt-1">{ticket.tableLabel}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Billet</p><p className="mt-0.5 font-medium text-text sm:mt-1">{ticket.type === "COUPLE" ? "Couple" : "Single"} · {ticket.shortCode}</p></div></div>;
 }
 
 const resultLabels: Record<CheckInAttemptRecord["result"], string> = {
