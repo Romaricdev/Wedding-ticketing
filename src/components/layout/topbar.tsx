@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 
 import { getAdminBreadcrumb } from "@/components/layout/admin-nav";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ROLE_LABELS, type AuthenticatedEventUser } from "@/types/auth";
 import { logoutAction } from "@/server/auth/actions";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ export function Topbar({ eventUser, onMenuClick, className }: TopbarProps) {
           <p className="text-sm font-medium text-text">{eventUser.displayName}</p>
           <p className="text-xs text-text-muted">{ROLE_LABELS[eventUser.role]}</p>
         </div>
+        <ThemeToggle />
         <form action={logoutAction}>
           <Button type="submit" variant="secondary" size="sm">
             Se déconnecter
