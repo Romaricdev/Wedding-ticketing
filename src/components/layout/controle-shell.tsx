@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 
 import { NetworkStatus } from "@/components/ui/network-status";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logoutAction } from "@/server/auth/actions";
 import { ROLE_LABELS, type AuthenticatedEventUser } from "@/types/auth";
 
@@ -25,6 +26,7 @@ export function ControleShell({ eventUser, children }: ControleShellProps) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <NetworkStatus />
+            <ThemeToggle />
             <form action={logoutAction}>
               <Button type="submit" variant="secondary" size="sm">
                 Se déconnecter
