@@ -34,6 +34,100 @@
   --space-12: 48px;
 }
 
+@keyframes wedding-loader-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wedding-loader-glow {
+  animation: wedding-loader-glow 2.4s ease-in-out infinite;
+}
+
+.wedding-loader-orb-a {
+  animation: wedding-loader-orb-a 5.8s ease-in-out infinite;
+}
+
+.wedding-loader-orb-b {
+  animation: wedding-loader-orb-b 7s ease-in-out infinite;
+}
+
+.wedding-loader-mark {
+  animation: wedding-loader-mark 820ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.wedding-loader-ornament,
+.wedding-loader-name,
+.wedding-loader-title,
+.wedding-loader-date {
+  opacity: 0;
+  animation: wedding-loader-rise 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.wedding-loader-ornament { animation-delay: 260ms; }
+.wedding-loader-name { animation-delay: 390ms; }
+.wedding-loader-title { animation-delay: 510ms; }
+.wedding-loader-date { animation-delay: 630ms; }
+
+.wedding-loader-spark {
+  animation: wedding-loader-spark 1.8s ease-in-out 480ms infinite;
+}
+
+.wedding-loader-spark-delayed {
+  animation-delay: 1.1s;
+}
+
+@keyframes wedding-loader-glow {
+  0%, 100% { opacity: 0.45; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1.14); }
+}
+
+@keyframes wedding-loader-orb-a {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(34px, 28px, 0) rotate(11deg); }
+}
+
+@keyframes wedding-loader-orb-b {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-28px, -22px, 0) rotate(-9deg); }
+}
+
+@keyframes wedding-loader-mark {
+  from { opacity: 0; transform: scale(0.62) rotate(-12deg); filter: blur(7px); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+}
+
+@keyframes wedding-loader-rise {
+  from { opacity: 0; transform: translateY(13px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wedding-loader-spark {
+  0%, 100% { opacity: 0; transform: scale(0.45); }
+  48% { opacity: 1; transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[wedding-loader-orbit_3s_linear_infinite\],
+  .animate-\[wedding-loader-orbit_5s_linear_infinite_reverse\] {
+    animation: none;
+  }
+
+  .wedding-loader-glow,
+  .wedding-loader-orb-a,
+  .wedding-loader-orb-b,
+  .wedding-loader-mark,
+  .wedding-loader-ornament,
+  .wedding-loader-name,
+  .wedding-loader-title,
+  .wedding-loader-date,
+  .wedding-loader-spark {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 :root[data-theme="dark"] {
   --background: #17191d;
   --surface: #20242a;
