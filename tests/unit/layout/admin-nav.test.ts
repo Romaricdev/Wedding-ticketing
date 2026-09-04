@@ -7,7 +7,7 @@ import {
 } from "@/components/layout/admin-nav";
 
 describe("admin-nav", () => {
-  it("contient les sept entrées dans le bon ordre", () => {
+  it("contient les huit entrées dans le bon ordre", () => {
     expect(ADMIN_NAV_ITEMS.map((item) => item.label)).toEqual([
       "Tableau de bord",
       "Invités",
@@ -15,6 +15,7 @@ describe("admin-nav", () => {
       "Billets",
       "Contrôleurs",
       "Historique",
+      "Galerie",
       "Paramètres",
     ]);
   });

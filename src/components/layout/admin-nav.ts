@@ -1,6 +1,7 @@
 import {
   Armchair,
   History,
+  Images,
   LayoutDashboard,
   Settings,
   ShieldCheck,
@@ -49,6 +50,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: History,
   },
   {
+    href: "/admin/galerie",
+    label: "Galerie",
+    icon: Images,
+  },
+  {
     href: "/admin/parametres",
     label: "Paramètres",
     icon: Settings,
@@ -69,8 +75,7 @@ export function getAdminBreadcrumb(pathname: string): string[] {
   }
 
   const matches = ADMIN_NAV_ITEMS.filter(
-    (navItem) =>
-      pathname === navItem.href || pathname.startsWith(`${navItem.href}/`),
+    (navItem) => pathname === navItem.href || pathname.startsWith(`${navItem.href}/`),
   ).sort((left, right) => right.href.length - left.href.length);
 
   const item = matches[0];

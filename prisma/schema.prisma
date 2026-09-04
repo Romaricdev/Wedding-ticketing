@@ -63,6 +63,8 @@ enum AuditAction {
   TICKET_CANCELLED
   CONTROLLER_CREATED
   CONTROLLER_DISABLED
+  GALLERY_PHOTO_UPLOADED
+  GALLERY_PHOTO_DELETED
   CHECK_IN_ACCEPTED
   CHECK_IN_MANUAL_ACCEPTED
 }
@@ -72,6 +74,7 @@ model Event {
   name        String      @db.VarChar(160)
   weddingDate DateTime?   @map("wedding_date") @db.Timestamptz(6)
   venueName   String?     @map("venue_name") @db.VarChar(200)
+  landingContent Json?    @map("landing_content") @db.JsonB
   timezone    String      @default("Africa/Douala") @db.VarChar(64)
   status      EventStatus @default(DRAFT)
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -84,9 +87,48 @@ model Event {
   tickets          Ticket[]
   checkInAttempts  CheckInAttempt[]
   auditLogs        AuditLog[]
+  galleryPhotos    GalleryPhoto[]
+  galleryCategories GalleryCategory[]
 
   @@index([status], map: "events_status_idx")
   @@map("events")
+}
+
+model GalleryPhoto {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId          String   @map("event_id") @db.Uuid
+  storageBucket    String   @map("storage_bucket") @db.VarChar(80)
+  storagePath      String   @map("storage_path") @db.Text
+  originalFilename String   @map("original_filename") @db.VarChar(255)
+  mimeType         String   @map("mime_type") @db.VarChar(100)
+  byteSize         Int      @map("byte_size")
+  caption          String?  @db.VarChar(240)
+  categoryId       String?  @map("category_id") @db.Uuid
+  isPublished      Boolean  @default(true) @map("is_published")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  category GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, categoryId, isPublished, createdAt(sort: Desc)], map: "gallery_photos_event_id_category_published_created_at_idx")
+  @@map("gallery_photos")
+}
+
+model GalleryCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  event  Event          @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  photos GalleryPhoto[]
+
+  @@unique([eventId, name], map: "gallery_categories_event_id_name_key")
+  @@index([eventId, sortOrder, createdAt], map: "gallery_categories_event_id_sort_order_created_at_idx")
+  @@map("gallery_categories")
 }
 
 model EventUser {
