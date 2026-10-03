@@ -12,9 +12,15 @@ import {
   updateTableForEvent,
 } from "@/server/tables/mutations";
 import { TableError } from "@/server/tables/errors";
-import { listActiveGuestsForTableForEvent } from "@/server/tables/queries";
+import { buildTablesWorkbookBuffer } from "@/server/tables/export";
+import {
+  getTableExportMetaForEvent,
+  listActiveGuestsForTableForEvent,
+  listTablesWithActiveGuestsForEvent,
+} from "@/server/tables/queries";
 import { parseTableFormData } from "@/server/tables/validation";
 import { Prisma } from "@prisma/client";
+import { DATABASE_UNAVAILABLE_MESSAGE, isDatabaseConnectionError } from "@/lib/database-errors";
 import type { GuestRecord } from "@/types/guests";
 import type { TableWithStats } from "@/types/tables";
 
@@ -190,5 +196,45 @@ export async function loadTableGuestsAction(
     }
 
     return { error: "Impossible de charger les invités de cette table." };
+  }
+}
+
+export type TableExportState = {
+  success?: boolean;
+  filename?: string;
+  base64?: string;
+  error?: string;
+};
+
+export async function exportTablesXlsxAction(): Promise<TableExportState> {
+  try {
+    const eventUser = await requireAdmin();
+    const [tables, meta] = await Promise.all([
+      listTablesWithActiveGuestsForEvent(eventUser.eventId),
+      getTableExportMetaForEvent(eventUser.eventId),
+    ]);
+
+    if (tables.length === 0) {
+      return { error: "Aucune table à exporter pour le moment." };
+    }
+
+    const buffer = await buildTablesWorkbookBuffer({ tables, meta });
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    return {
+      success: true,
+      filename: `plan-de-table-${stamp}.xlsx`,
+      base64: buffer.toString("base64"),
+    };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: error.message };
+    }
+
+    if (isDatabaseConnectionError(error)) {
+      return { error: DATABASE_UNAVAILABLE_MESSAGE };
+    }
+
+    return { error: "L'export Excel a échoué. Réessayez dans quelques secondes." };
   }
 }

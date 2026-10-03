@@ -35,6 +35,15 @@ export function formatTableOccupancy(assignedCount: number, capacity: number): s
   return `${assignedCount} / ${capacity}`;
 }
 
+export function occupancyPercent(assignedCount: number, capacity: number): number {
+  if (capacity <= 0) return 0;
+  return Math.round((assignedCount / capacity) * 100);
+}
+
+export function formatOccupancyRate(assignedCount: number, capacity: number): string {
+  return `${occupancyPercent(assignedCount, capacity)} %`;
+}
+
 export function toTableWithStats(
   table: TableRecord,
   assignedCount = 0,

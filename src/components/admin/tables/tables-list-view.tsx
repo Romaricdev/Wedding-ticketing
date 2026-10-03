@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { Eye, Grid2X2, List, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Download, Eye, Grid2X2, List, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { DeleteTableDialog } from "@/components/admin/tables/delete-table-dialog";
@@ -22,6 +22,7 @@ import { Select } from "@/components/ui/select";
 import { Surface } from "@/components/ui/surface";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { exportTablesXlsxAction } from "@/server/tables/actions";
 import type { TableCapacityStatus, TableWithStats } from "@/types/tables";
 
 type StatusFilter = "ALL" | TableCapacityStatus;
@@ -75,6 +76,7 @@ export function TablesListView({
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [formTarget, setFormTarget] = useState<TableWithStats | "create" | null>(initialCreate ? "create" : null);
   const [isRefreshing, startRefresh] = useTransition();
+  const [isExporting, startExport] = useTransition();
   const filteredTables = useMemo(() => tables.filter((table) => (!search.trim() || table.label.toLowerCase().includes(search.trim().toLowerCase())) && (statusFilter === "ALL" || table.status === statusFilter)), [search, statusFilter, tables]);
   const pageCount = Math.max(1, Math.ceil(filteredTables.length / pageSize));
   const currentPage = Math.min(page, pageCount);
@@ -88,6 +90,41 @@ export function TablesListView({
   const toggleSelected = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const handleBulkDeleted = (ids: string[]) => { setTables((current) => current.filter((table) => !ids.includes(table.id))); setSelectedIds([]); setBulkDeleteOpen(false); toast({ title: "Tables supprimées", description: `${ids.length} table${ids.length > 1 ? "s" : ""} retirée${ids.length > 1 ? "s" : ""} de la configuration.`, variant: "success" }); startRefresh(() => router.refresh()); };
   const closeForm = () => setFormTarget(null);
+  const handleExport = () => {
+    startExport(async () => {
+      const result = await exportTablesXlsxAction();
+      if (result.error || !result.base64 || !result.filename) {
+        toast({
+          title: "Export impossible",
+          description: result.error ?? "Une erreur est survenue.",
+          variant: "error",
+        });
+        return;
+      }
+
+      const binary = atob(result.base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+      const blob = new Blob([bytes], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = result.filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export prêt",
+        description: "Le fichier Excel des tables et invités a été téléchargé.",
+        variant: "success",
+      });
+    });
+  };
+
   const handleFormSuccess = (table: TableWithStats) => {
     setTables((current) => upsertTable(current, table));
     toast({ title: formTarget === "create" ? "Table créée" : "Table mise à jour", description: `« ${table.label} » a été enregistrée.`, variant: "success" });
@@ -99,7 +136,7 @@ export function TablesListView({
   if (loadError) return <div className="space-y-5"><PageHeader title="Tables" description="Configurez les tables et leur capacité avant d'attribuer les invités." /><ErrorState title="Impossible de charger les tables" message={loadError} onRetry={() => startRefresh(() => router.refresh())} retryLabel={isRefreshing ? "Actualisation…" : "Réessayer"} /></div>;
 
   return <div className="space-y-5">
-    <PageHeader title="Tables" description="Configurez les tables et leur capacité avant d'attribuer les invités." actions={<Button onClick={() => setFormTarget("create")}><Plus className="size-4" aria-hidden="true" /> Ajouter une table</Button>} />
+    <PageHeader title="Tables" description="Configurez les tables et leur capacité avant d'attribuer les invités." actions={<div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={handleExport} loading={isExporting} disabled={isExporting || tables.length === 0}><Download className="size-4" aria-hidden="true" /> Exporter Excel</Button><Button onClick={() => setFormTarget("create")}><Plus className="size-4" aria-hidden="true" /> Ajouter une table</Button></div>} />
     {tables.length === 0 ? <EmptyState title="Aucune table configurée" description="Créez les tables avant d'attribuer les places aux invités." actionLabel="Ajouter une table" onAction={() => setFormTarget("create")} /> : <>
       <div className="space-y-3">
         <div className="md:hidden"><Button variant="secondary" className="w-full" onClick={() => setFiltersOpen((open) => !open)}>{filtersOpen ? "Masquer les filtres" : "Afficher les filtres"}</Button></div>

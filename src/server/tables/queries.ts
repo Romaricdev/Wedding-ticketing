@@ -5,7 +5,7 @@ import { toGuestRecord } from "@/lib/guests";
 import { toTableWithStats } from "@/lib/tables";
 import { TableError } from "@/server/tables/errors";
 import type { GuestRecord } from "@/types/guests";
-import type { TableWithStats } from "@/types/tables";
+import type { TableExportMeta, TableExportRow, TableWithStats } from "@/types/tables";
 
 export async function listTablesForEvent(eventId: string): Promise<TableWithStats[]> {
   const tables = await prisma.diningTable.findMany({
@@ -96,4 +96,55 @@ export async function listActiveGuestsForTableForEvent(
   });
 
   return guests.map(toGuestRecord);
+}
+
+export async function getTableExportMetaForEvent(
+  eventId: string,
+): Promise<TableExportMeta> {
+  const event = await prisma.event.findFirst({
+    where: { id: eventId },
+    select: {
+      name: true,
+      venueName: true,
+      weddingDate: true,
+    },
+  });
+
+  return {
+    eventName: event?.name ?? "Événement",
+    venueName: event?.venueName ?? null,
+    weddingDate: event?.weddingDate ?? null,
+  };
+}
+
+export async function listTablesWithActiveGuestsForEvent(
+  eventId: string,
+): Promise<TableExportRow[]> {
+  const tables = await prisma.diningTable.findMany({
+    where: { eventId },
+    orderBy: { label: "asc" },
+    include: {
+      guests: {
+        where: { status: GuestStatus.ACTIVE },
+        orderBy: [{ lastName: "asc" }, { firstNames: "asc" }],
+        select: {
+          lastName: true,
+          firstNames: true,
+          notes: true,
+        },
+      },
+    },
+  });
+
+  return tables.map((table) => {
+    const stats = toTableWithStats(table, table.guests.length);
+    return {
+      label: stats.label,
+      capacity: stats.capacity,
+      assignedCount: stats.assignedCount,
+      availableCount: stats.availableCount,
+      status: stats.status,
+      guests: table.guests,
+    };
+  });
 }

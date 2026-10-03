@@ -79,7 +79,19 @@ adminTableTests("Gestion des tables — ADMIN", () => {
     await page.goto("/admin/tables");
     await expect(page.getByRole("heading", { name: "Tables", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Ajouter une table/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Exporter Excel/i })).toBeVisible();
     await expect(page.getByLabel(/Rechercher une table/i)).toBeVisible();
+  });
+
+  test("exporte un fichier Excel des tables et invités", async ({ page }) => {
+    await page.goto("/admin/tables");
+    const exportButton = page.getByRole("button", { name: /Exporter Excel/i });
+    await expect(exportButton).toBeEnabled({ timeout: 45_000 });
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      exportButton.click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/\.xlsx$/i);
   });
 
   test("crée une table vide depuis un modal", async ({ page }) => {
