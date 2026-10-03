@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { TableDetailView } from "@/components/admin/tables/table-detail-view";
 import { LoadingState } from "@/components/ui/loading-state";
-import { getTableForEvent } from "@/server/tables/queries";
+import {
+  getTableForEvent,
+  listActiveGuestsForTableForEvent,
+} from "@/server/tables/queries";
 import { TableError } from "@/server/tables/errors";
 import { requireAdmin } from "@/server/auth";
 
@@ -18,9 +21,13 @@ export default async function TableDetailPage({ params, searchParams }: TableDet
   const query = await searchParams;
 
   let table: Awaited<ReturnType<typeof getTableForEvent>>;
+  let guests: Awaited<ReturnType<typeof listActiveGuestsForTableForEvent>>;
 
   try {
-    table = await getTableForEvent(eventUser.eventId, id);
+    [table, guests] = await Promise.all([
+      getTableForEvent(eventUser.eventId, id),
+      listActiveGuestsForTableForEvent(eventUser.eventId, id),
+    ]);
   } catch (error) {
     if (error instanceof TableError && error.code === "NOT_FOUND") {
       notFound();
@@ -34,6 +41,7 @@ export default async function TableDetailPage({ params, searchParams }: TableDet
       <TableDetailView
         key={`${table.id}-${query.edit === "1" ? "edit" : "view"}`}
         table={table}
+        guests={guests}
         initialEditMode={query.edit === "1"}
       />
     </Suspense>

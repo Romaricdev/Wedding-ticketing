@@ -18,6 +18,7 @@ export function GuestsPageClient({ guests, loadError }: GuestsPageClientProps) {
       initialGuests={guests}
       loadError={loadError}
       initialCreate={searchParams.get("create") === "1"}
+      initialSearch={searchParams.get("search") ?? ""}
     />
   );
 }

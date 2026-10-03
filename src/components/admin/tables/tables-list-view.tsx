@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { Eye, Grid2X2, List, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, Grid2X2, List, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { DeleteTableDialog } from "@/components/admin/tables/delete-table-dialog";
 import { BulkDeleteTablesDialog } from "@/components/admin/tables/bulk-delete-tables-dialog";
 import { TableDialog } from "@/components/admin/tables/table-dialog";
+import { TableGuestsDialog } from "@/components/admin/tables/table-guests-dialog";
 import { TableStatusBadge } from "@/components/admin/tables/table-status-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -69,6 +70,7 @@ export function TablesListView({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [deleteTarget, setDeleteTarget] = useState<TableWithStats | null>(null);
+  const [guestsTarget, setGuestsTarget] = useState<TableWithStats | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [formTarget, setFormTarget] = useState<TableWithStats | "create" | null>(initialCreate ? "create" : null);
@@ -112,11 +114,18 @@ export function TablesListView({
       </div>
       {filteredTables.length === 0 ? <EmptyState title="Aucun résultat" description="Aucune table ne correspond à votre recherche ou à vos filtres." actionLabel="Réinitialiser les filtres" onAction={resetFilters} /> : <>
         {selectedTables.length > 0 ? <div className="flex flex-wrap items-center gap-3 border border-primary/30 bg-primary-subtle p-3"><p className="text-sm font-medium text-text">{selectedTables.length} sélectionnée{selectedTables.length > 1 ? "s" : ""}</p><Button size="sm" variant="danger" onClick={() => setBulkDeleteOpen(true)}>Supprimer la sélection</Button><Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Désélectionner</Button></div> : null}
-        {viewMode === "table" ? <div className="hidden overflow-x-auto md:block"><Surface className="overflow-hidden"><table className="min-w-full text-sm"><thead className="border-b border-border bg-surface-subtle"><tr>{["", "Table", "Occupation", "Statut", "Actions"].map((header) => <th key={header} scope="col" className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">{header || <span className="sr-only">Sélection</span>}</th>)}</tr></thead><tbody className="divide-y divide-border">{paginatedTables.map((table) => <tr key={table.id} className="hover:bg-surface-subtle/60"><td className="px-4 py-3"><input type="checkbox" checked={selectedIds.includes(table.id)} onChange={() => toggleSelected(table.id)} aria-label={`Sélectionner ${table.label}`} className="size-4 accent-primary" /></td><td className="px-4 py-3"><Link href={`/admin/tables/${table.id}`} className="font-medium text-text hover:text-primary-hover">{table.label}</Link></td><td className="min-w-56 px-4 py-3"><Occupancy table={table} /></td><td className="px-4 py-3"><TableStatusBadge status={table.status} /></td><td className="px-4 py-3"><TableRowActions table={table} onEdit={() => setFormTarget(table)} onDelete={() => setDeleteTarget(table)} /></td></tr>)}</tbody></table></Surface></div> : <TableCards tables={paginatedTables} onEdit={setFormTarget} onDelete={setDeleteTarget} />}
+        {viewMode === "table" ? <div className="hidden overflow-x-auto md:block"><Surface className="overflow-hidden"><table className="min-w-full text-sm"><thead className="border-b border-border bg-surface-subtle"><tr>{["", "Table", "Occupation", "Statut", "Actions"].map((header) => <th key={header} scope="col" className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">{header || <span className="sr-only">Sélection</span>}</th>)}</tr></thead><tbody className="divide-y divide-border">{paginatedTables.map((table) => <tr key={table.id} className="hover:bg-surface-subtle/60"><td className="px-4 py-3"><input type="checkbox" checked={selectedIds.includes(table.id)} onChange={() => toggleSelected(table.id)} aria-label={`Sélectionner ${table.label}`} className="size-4 accent-primary" /></td><td className="px-4 py-3"><Link href={`/admin/tables/${table.id}`} className="font-medium text-text hover:text-primary-hover">{table.label}</Link></td><td className="min-w-56 px-4 py-3"><Occupancy table={table} /></td><td className="px-4 py-3"><TableStatusBadge status={table.status} /></td><td className="px-4 py-3"><TableRowActions table={table} onEdit={() => setFormTarget(table)} onViewGuests={() => setGuestsTarget(table)} onDelete={() => setDeleteTarget(table)} /></td></tr>)}</tbody></table></Surface></div> : <TableCards tables={paginatedTables} onEdit={setFormTarget} onViewGuests={setGuestsTarget} onDelete={setDeleteTarget} />}
         <div className="md:hidden"><MobileList items={paginatedTables.map((table) => ({ id: table.id, title: table.label, subtitle: `${table.assignedCount} / ${table.capacity} places · ${table.availableCount} libres`, badges: <TableStatusBadge status={table.status} />, href: `/admin/tables/${table.id}` }))} /></div>
         <Pagination page={currentPage} totalItems={filteredTables.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} itemLabel="tables" />
       </>}
     </>}
+    {guestsTarget ? (
+      <TableGuestsDialog
+        table={guestsTarget}
+        open
+        onClose={() => setGuestsTarget(null)}
+      />
+    ) : null}
     {deleteTarget && <DeleteTableDialog table={deleteTarget} open onClose={() => setDeleteTarget(null)} />}
     {bulkDeleteOpen ? <BulkDeleteTablesDialog tables={selectedTables} onClose={() => setBulkDeleteOpen(false)} onSuccess={handleBulkDeleted} /> : null}
     <TableDialog open={formTarget !== null} key={formTarget === null ? "closed" : formTarget === "create" ? "create" : `edit-${formTarget.id}`} mode={formTarget === "create" ? "create" : "edit"} table={formTarget && formTarget !== "create" ? formTarget : undefined} onClose={closeForm} onSuccess={handleFormSuccess} />
@@ -128,11 +137,91 @@ function Occupancy({ table }: { table: TableWithStats }) {
   return <><div className="flex items-baseline justify-between gap-3"><span className="font-medium tabular-nums text-text">{table.assignedCount} / {table.capacity} places</span><span className="text-xs tabular-nums text-text-muted">{table.availableCount} libres</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-subtle" aria-label={`${table.assignedCount} places attribuées sur ${table.capacity}`}><div className={cn("h-full rounded-full", table.status === "FULL" ? "bg-warning" : "bg-primary")} style={{ width: `${fill}%` }} /></div></>;
 }
 
-function TableCards({ tables, onEdit, onDelete }: { tables: TableWithStats[]; onEdit: (table: TableWithStats) => void; onDelete: (table: TableWithStats) => void }) {
-  return <div className="hidden grid-cols-1 gap-3 md:grid lg:grid-cols-2 xl:grid-cols-3">{tables.map((table) => <Surface key={table.id} className="p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><Link href={`/admin/tables/${table.id}`} className="block truncate font-semibold text-text hover:text-primary-hover">{table.label}</Link><p className="mt-1 text-sm text-text-muted">{table.availableCount} place{table.availableCount > 1 ? "s" : ""} libre{table.availableCount > 1 ? "s" : ""}</p></div><TableStatusBadge status={table.status} /></div><div className="mt-5"><Occupancy table={table} /></div><div className="mt-4 border-t border-border pt-3"><TableRowActions table={table} onEdit={() => onEdit(table)} onDelete={() => onDelete(table)} /></div></Surface>)}</div>;
+function TableCards({
+  tables,
+  onEdit,
+  onViewGuests,
+  onDelete,
+}: {
+  tables: TableWithStats[];
+  onEdit: (table: TableWithStats) => void;
+  onViewGuests: (table: TableWithStats) => void;
+  onDelete: (table: TableWithStats) => void;
+}) {
+  return <div className="hidden grid-cols-1 gap-3 md:grid lg:grid-cols-2 xl:grid-cols-3">{tables.map((table) => <Surface key={table.id} className="p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><Link href={`/admin/tables/${table.id}`} className="block truncate font-semibold text-text hover:text-primary-hover">{table.label}</Link><p className="mt-1 text-sm text-text-muted">{table.availableCount} place{table.availableCount > 1 ? "s" : ""} libre{table.availableCount > 1 ? "s" : ""}</p></div><TableStatusBadge status={table.status} /></div><div className="mt-5"><Occupancy table={table} /></div><div className="mt-4 border-t border-border pt-3"><TableRowActions table={table} onEdit={() => onEdit(table)} onViewGuests={() => onViewGuests(table)} onDelete={() => onDelete(table)} /></div></Surface>)}</div>;
 }
 
-function TableRowActions({ table, onEdit, onDelete }: { table: TableWithStats; onEdit: () => void; onDelete: () => void }) {
+function TableRowActions({
+  table,
+  onEdit,
+  onViewGuests,
+  onDelete,
+}: {
+  table: TableWithStats;
+  onEdit: () => void;
+  onViewGuests: () => void;
+  onDelete: () => void;
+}) {
   const canDelete = table.assignedCount === 0;
-  return <div className="flex items-center justify-start gap-1"><Link href={`/admin/tables/${table.id}`} className="inline-flex size-9 items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text" aria-label={`Voir ${table.label}`} title="Voir le détail"><Eye className="size-4" aria-hidden="true" /></Link><button type="button" onClick={onEdit} className="inline-flex size-9 items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text" aria-label={`Modifier ${table.label}`} title="Modifier"><Pencil className="size-4" aria-hidden="true" /></button><details className="group relative"><summary className="flex size-9 cursor-pointer list-none items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text" aria-label={`Plus d’actions pour ${table.label}`} title="Plus d’actions"><MoreHorizontal className="size-4" aria-hidden="true" /></summary><div className="absolute right-0 top-10 z-20 w-52 border border-border bg-surface p-1 shadow-overlay">{canDelete ? <button type="button" onClick={onDelete} className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm text-danger hover:bg-danger-subtle"><Trash2 className="size-4" aria-hidden="true" /> Supprimer la table</button> : <p className="px-3 py-2 text-xs leading-5 text-text-muted">Suppression impossible : des invités y sont attribués.</p>}</div></details></div>;
+  return (
+    <div className="flex items-center justify-start gap-1">
+      <Link
+        href={`/admin/tables/${table.id}`}
+        className="inline-flex size-9 items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text"
+        aria-label={`Voir ${table.label}`}
+        title="Voir le détail"
+      >
+        <Eye className="size-4" aria-hidden="true" />
+      </Link>
+      <button
+        type="button"
+        onClick={onViewGuests}
+        className="inline-flex size-9 items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text"
+        aria-label={`Voir les invités de ${table.label}`}
+        title="Voir les invités"
+      >
+        <Users className="size-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="inline-flex size-9 items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text"
+        aria-label={`Modifier ${table.label}`}
+        title="Modifier"
+      >
+        <Pencil className="size-4" aria-hidden="true" />
+      </button>
+      <details className="group relative">
+        <summary
+          className="flex size-9 cursor-pointer list-none items-center justify-center rounded-sm text-text-muted hover:bg-surface-subtle hover:text-text"
+          aria-label={`Plus d’actions pour ${table.label}`}
+          title="Plus d’actions"
+        >
+          <MoreHorizontal className="size-4" aria-hidden="true" />
+        </summary>
+        <div className="absolute right-0 top-10 z-20 w-52 border border-border bg-surface p-1 shadow-overlay">
+          <button
+            type="button"
+            onClick={onViewGuests}
+            className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm text-text hover:bg-surface-subtle"
+          >
+            <Users className="size-4" aria-hidden="true" /> Voir les invités
+          </button>
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm text-danger hover:bg-danger-subtle"
+            >
+              <Trash2 className="size-4" aria-hidden="true" /> Supprimer la table
+            </button>
+          ) : (
+            <p className="px-3 py-2 text-xs leading-5 text-text-muted">
+              Suppression impossible : des invités y sont attribués.
+            </p>
+          )}
+        </div>
+      </details>
+    </div>
+  );
 }

@@ -9,17 +9,19 @@ import { DeleteTableDialog } from "@/components/admin/tables/delete-table-dialog
 import { TableDialog } from "@/components/admin/tables/table-dialog";
 import { TableStatusBadge } from "@/components/admin/tables/table-status-badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { TableAssignedGuests } from "@/components/admin/tables/table-assigned-guests";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface } from "@/components/ui/surface";
+import type { GuestRecord } from "@/types/guests";
 import type { TableWithStats } from "@/types/tables";
 
 export interface TableDetailViewProps {
   table: TableWithStats;
+  guests: GuestRecord[];
   initialEditMode?: boolean;
 }
 
-export function TableDetailView({ table, initialEditMode = false }: TableDetailViewProps) {
+export function TableDetailView({ table, guests, initialEditMode = false }: TableDetailViewProps) {
   const router = useRouter();
   const [savedTable, setSavedTable] = useState<TableWithStats | null>(null);
   const [previousTable, setPreviousTable] = useState(table);
@@ -86,18 +88,11 @@ export function TableDetailView({ table, initialEditMode = false }: TableDetailV
           <Users className="size-4 text-text-muted" aria-hidden="true" />
           <h2 className="text-base font-semibold text-text">Invités attribués</h2>
         </div>
-        <EmptyState
-          title={
-            currentTable.assignedCount === 0
-              ? "Aucun invité attribué"
-              : "Liste des invités indisponible"
-          }
-          description={
-            currentTable.assignedCount === 0
-              ? "Les personnes affectées à cette table apparaîtront ici après la Phase 4."
-              : `${currentTable.assignedCount} personne(s) associée(s) à cette table. La liste détaillée apparaîtra en Phase 4.`
-          }
-        />
+        <p className="text-sm text-text-muted">
+          Invités actifs dont la table est « {currentTable.label} » (attribution via billet ou
+          affectation directe).
+        </p>
+        <TableAssignedGuests guests={guests} tableLabel={currentTable.label} />
       </Surface>
       {deleteOpen ? (
         <DeleteTableDialog table={currentTable} open onClose={() => setDeleteOpen(false)} />

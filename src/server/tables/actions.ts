@@ -12,8 +12,10 @@ import {
   updateTableForEvent,
 } from "@/server/tables/mutations";
 import { TableError } from "@/server/tables/errors";
+import { listActiveGuestsForTableForEvent } from "@/server/tables/queries";
 import { parseTableFormData } from "@/server/tables/validation";
 import { Prisma } from "@prisma/client";
+import type { GuestRecord } from "@/types/guests";
 import type { TableWithStats } from "@/types/tables";
 
 export type TableFormState = {
@@ -173,4 +175,20 @@ export async function deleteTableAction(
 export async function bulkDeleteTablesAction(tableIds: string[]): Promise<{ success?: boolean; tableIds?: string[]; error?: string }> {
   try { const eventUser = await requireAdmin(); const ids = await deleteTablesForEvent(eventUser, tableIds); revalidateTablePaths(); return { success: true, tableIds: ids }; }
   catch (error) { return { error: error instanceof TableError || error instanceof AuthError ? error.message : "La suppression groupée a échoué." }; }
+}
+
+export async function loadTableGuestsAction(
+  tableId: string,
+): Promise<{ guests?: GuestRecord[]; error?: string }> {
+  try {
+    const eventUser = await requireAdmin();
+    const guests = await listActiveGuestsForTableForEvent(eventUser.eventId, tableId);
+    return { guests };
+  } catch (error) {
+    if (error instanceof TableError || error instanceof AuthError) {
+      return { error: error.message };
+    }
+
+    return { error: "Impossible de charger les invités de cette table." };
+  }
 }

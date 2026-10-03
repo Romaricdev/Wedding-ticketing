@@ -77,12 +77,14 @@ export interface GuestsListViewProps {
   initialGuests: GuestRecord[];
   loadError?: string;
   initialCreate?: boolean;
+  initialSearch?: string;
 }
 
 export function GuestsListView({
   initialGuests,
   loadError,
   initialCreate = false,
+  initialSearch = "",
 }: GuestsListViewProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -94,7 +96,7 @@ export function GuestsListView({
     setGuests(initialGuests);
   }
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("table");

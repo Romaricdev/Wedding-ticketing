@@ -1,7 +1,11 @@
 export { createTableAction, deleteTableAction, updateTableAction } from "./actions";
 export type { TableFormState } from "./actions";
 export { TableError } from "./errors";
-export { listTablesForEvent, getTableForEvent } from "./queries";
+export {
+  listTablesForEvent,
+  getTableForEvent,
+  listActiveGuestsForTableForEvent,
+} from "./queries";
 export {
   computeTableStats,
   formatTableOccupancy,
